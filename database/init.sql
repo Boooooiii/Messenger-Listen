@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     user_tag VARCHAR(255) UNIQUE NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users_info (
+CREATE TABLE IF NOT EXISTS users_info (
 	user_id INTEGER PRIMARY KEY NOT NULL,
  	name VARCHAR(63),
 	description TEXT,
@@ -19,13 +19,13 @@ CREATE TABLE users_info (
 	ON DELETE CASCADE
 );
 
-CREATE TABLE chats (
+CREATE TABLE IF NOT EXISTS chats (
     id SERIAL PRIMARY KEY,
     is_group BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE groups_info (
+CREATE TABLE IF NOT EXISTS groups_info (
 	group_id INTEGER PRIMARY KEY REFERENCES chats(id) 
 	ON DELETE CASCADE
 	ON UPDATE CASCADE,
@@ -34,7 +34,7 @@ CREATE TABLE groups_info (
 	description TEXT
 );
 
-CREATE TABLE chat_members (
+CREATE TABLE IF NOT EXISTS chat_members (
     chat_id INTEGER REFERENCES chats(id)
 	ON DELETE CASCADE
 	ON UPDATE CASCADE,
@@ -46,7 +46,7 @@ CREATE TABLE chat_members (
     PRIMARY KEY (chat_id, user_id)
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     chat_id INTEGER REFERENCES chats(id) 
 	ON DELETE CASCADE
@@ -61,7 +61,7 @@ CREATE TABLE messages (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE message_statuses (
+CREATE TABLE IF NOT EXISTS message_statuses (
 	message_id INTEGER REFERENCES messages(id)
 	ON DELETE CASCADE
 	ON UPDATE CASCADE,
@@ -74,7 +74,7 @@ CREATE TABLE message_statuses (
 	PRIMARY KEY(message_id, user_id)
 );
 
-CREATE TABLE message_attachments (
+CREATE TABLE IF NOT EXISTS message_attachments (
     id SERIAL PRIMARY KEY,
     message_id INTEGER NOT NULL REFERENCES messages(id)
 	ON DELETE CASCADE
@@ -86,7 +86,7 @@ CREATE TABLE message_attachments (
     metadata JSONB DEFAULT NULL       
 );
 
-CREATE TABLE unverified_users (
+CREATE TABLE IF NOT EXISTS unverified_users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     user_tag VARCHAR(255) UNIQUE NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE unverified_users (
     registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE session_codes (
+CREATE TABLE IF NOT EXISTS session_codes (
     user_id INTEGER REFERENCES users(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
@@ -108,7 +108,7 @@ CREATE TABLE session_codes (
     PRIMARY KEY(user_id, device_id)
 );
 
-CREATE TABLE message_reactions (
+CREATE TABLE IF NOT EXISTS message_reactions (
     message_id INTEGER REFERENCES messages(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE,

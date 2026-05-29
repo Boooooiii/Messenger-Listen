@@ -1,248 +1,155 @@
-1 Normal Form:
+﻿# Proving normal forms
+
+    Normal Forms (NF) are a progressive set of mathematical rules and criteria used to design a relational database schema. Each level of normalization (from 1NF up to 6NF) builds upon the previous one, ensuring that the database structure becomes cleaner, more logical, and more stable.
+
+    The combination of 1NF, 2NF, and 3NF mitigates roughly 99% of all real-world data anomalies and redundancy issues. Higher normal forms require breaking tables down into tiny, hyper-isolated fragments. While mathematically pure, this forces the backend server to run heavy, nested JOIN queries, severely degrading read/write performance under load. 
 
-&#x20;- Every table have its unique primary key:
+## 1 Normal Form:
 
-&#x09;users 			- id
+- Every table has its unique primary key:
 
-&#x09;users\_info	 	- user\_id
+    |	DB TABLE		| KEY |
+    | :---: | :---: |
+    |	users 			| id |
+    |	users_info	 	| user_id |
+    |	unverified_users 	| id |
+    |	chats		 	| id |
+    |	groups_info	 	| group_id |
+    |	chat_members	 	| chat_id, user_id |
+    |	messages	 	| id |
+    |	message_statuses 	| message_id, user_id |
+    |	message_reactions	| message_id, user_id, reaction |
+    |	message_attachments	| id |
+    |	session_codes 		| user_id, device_id |
 
-&#x09;unverified\_users 	- id
+- Every cell contains only one inseparable value.
 
-&#x09;chats		 	- id
+## 2 Normal Form
 
-&#x09;groups\_info	 	- group\_id
+- **1NF** rules are followed.
 
-&#x09;chat\_members	 	- chat\_id, user\_id
+- Every non-key column must depend on all parts of primary key, not only a half:
 
-&#x09;messages	 	- id
+### USERS
+	email              ->  id
+	user_tag           ->  id
+	password_hash      ->  id
+	public_key         ->  id
+	created_at         ->  id
 
-&#x09;message\_statuses 	- message\_id, user\_id
+### USERS_INFO
+	name               ->  user_id
+	description        ->  user_id
+	birth_date         ->  user_id
+	mood               ->  user_id
 
-&#x09;message\_reactions	- message\_id, user\_id, reaction
+### CHATS
+	is_group           ->  id
+	created_at         ->  id
 
-&#x09;message\_attachments	- id
+### GROUPS_INFO
+	is_public          ->  group_id
+	name               ->  group_id
+	description        ->  group_id
 
-&#x09;session\_codes 		- user\_id, device\_id
+### CHAT_MEMBERS
+	joined_at          ->  chat_id, user_id  (Full dependency on composite key)
 
+### MESSAGES
+	chat_id            ->  id
+	sender_id          ->  id
+	message_text       ->  id
+	replies_to         ->  id
+	sent_at            ->  id
 
+### MESSAGE_STATUSES
+	is_read            ->  message_id, user_id  (Full dependency on composite key)
+	read_at            ->  message_id, user_id  (Full dependency on composite key)
 
-\- Every cell contains only one inseparatble value.
+### UNVERIFIED_USERS
+	email              ->  id
+	user_tag           ->  id
+	password_hash      ->  id
+	public_key         ->  id
+	confirmation_code  ->  id
+	created_at         ->  id
 
+### MESSAGE_ATTACHMENTS
+	message_id         ->  id
+	file_path          ->  id
+	file_type          ->  id
+	file_size          ->  id
+	file_name          ->  id
+	metadata           ->  id
 
+### SESSION_CODES
+	code               ->  user_id, device_id  (Full dependency on composite key)
+	created_at         ->  user_id, device_id  (Full dependency on composite key)
 
-2 Normal Form
+### MESSAGE_REACTIONS
+	created_at         ->  message_id, user_id, reaction (Full dependency on composite key)
 
-&#x20;- 1NF rules are followed.
 
-&#x20;- Every non-key column must depend on all parts of primary key, not only a half:
+## 3 Normal Form
 
-&#x09;		USERS
+- **1NF** and **2NF** rules are followed.
 
-&#x09;email	     	 ->		id
+- No *transitive* dependencies exist:
 
-&#x09;user\_tag     	 ->		id
+### USERS_INFO
+    user_id -> name        (name does not determine description, birth\_date or mood)
+    user_id -> description
+    user_id -> birth_date
+    user_id -> mood
 
-&#x09;password\_hash	 ->		id
 
-&#x09;public\_key     	 ->		id
 
-&#x09;created\_at     	 ->		id
+### GROUPS_INFO
+    group_id -> is_public  (is_public does not determine name or description)
+    group_id -> name
+    group_id -> description
 
 
 
-&#x09;		USERS\_INFO
+### MESSAGES
+    id -> chat_id          (chat_id does not determine sender_id or message_text)
+    id -> sender_id
+    id -> message_text
+    id -> replies_to
+    id -> sent_at
 
-&#x09;name		 ->		user\_id
 
-&#x09;description	 ->		user\_id
 
-&#x09;birth\_date	 ->		user\_id
+### SESSION_CODES
+    (user_id, device_id) -> code        (code and created_at are independent)
+    (user_id, device_id) -> created_at
 
-&#x09;mood		 ->		user\_id
 
 
+### MESSAGE_STATUSES
+    (message_id, user_id) -> is_read    (read_at is a timestamp helper for is_read,
+    (message_id, user_id) -> read_at     both strictly depend on the composite PK)
 
-&#x09;		CHATS
 
-&#x09;is\_group	 ->		id
 
-&#x09;created\_at	 ->		id
+### MESSAGE_ATTACHMENTS
+    id -> message_id       (message_id does not determine file_path, file_type, etc.)
+    id -> file_path
+    id -> file_type
+    id -> file_size
+    id -> file_name
+    id -> metadata
 
 
+> [!NOTE]
+>**Tables with 0 or 1 non-key attributes automatically satisfy 3NF.**  
+>It is mathematically impossible to have a transitive dependency with less than two non-key columns:
+>  
+>- CHATS&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; - Only 1 non-key column (is_group)  
+>- CHAT_MEMBERS&emsp;&emsp;&nbsp;&nbsp; - Only 1 non-key column (joined_at)  
+>- MESSAGE_REACTIONS - Only 1 non-key column (created_at)
 
-&#x09;		GROUPS\_INFO
 
-&#x09;is\_public	 ->		group\_id
-
-&#x09;name		 ->		group\_id
-
-&#x09;description	 ->		group\_id
-
-
-
-&#x09;		CHAT\_MEMBERS
-
-&#x09;joined\_at	 ->		chat\_id, user\_id  (Full dependency on composite key)
-
-
-
-&#x09;		MESSAGES
-
-&#x09;chat\_id		 ->		id
-
-&#x09;sender\_id	 ->		id
-
-&#x09;message\_text	 ->		id
-
-&#x09;replies\_to	 ->		id
-
-&#x09;sent\_at		 ->		id
-
-
-
-&#x09;		MESSAGE\_STATUSES
-
-&#x09;is\_read		 ->		message\_id, user\_id  (Full dependency on composite key)
-
-&#x09;read\_at		 ->		message\_id, user\_id  (Full dependency on composite key)
-
-
-
-&#x09;		UNVERIFIED\_USERS
-
-&#x09;email		 ->		id
-
-&#x09;user\_tag	 ->		id
-
-&#x09;password\_hash	 ->		id
-
-&#x09;public\_key	 ->		id
-
-&#x09;code		 ->		id
-
-&#x09;created\_at	 ->		id
-
-
-
-&#x09;		MESSAGE\_ATTACHMENTS
-
-&#x09;message\_id 	 ->		id
-
-&#x09;file\_path	 ->		id
-
-&#x09;file\_type	 ->		id
-
-&#x09;file\_size	 ->		id
-
-&#x09;file\_name	 ->		id
-
-&#x09;metadata	 ->		id
-
-
-
-&#x09;		SESSION\_CODES
-
-&#x09;code		 ->		user\_id, device\_id  (Full dependency on composite key)
-
-&#x09;created\_at	 ->		user\_id, device\_id  (Full dependency on composite key)
-
-
-
-&#x09;		MESSAGE\_REACTIONS
-
-&#x09;created\_at	 ->		message\_id, user\_id, reaction (Full dependency on composite key)
-
-
-
-3 Normal Form
-
-&#x20;- 1NF and 2NF rules are followed.
-
-&#x20;- No transitive dependencies exists:
-
-
-
-&#x09;		USERS\_INFO
-
-&#x09;user\_id -> name        (name does not determine description, birth\_date or mood)
-
-&#x09;user\_id -> description
-
-&#x09;user\_id -> birth\_date
-
-&#x09;user\_id -> mood
-
-
-
-&#x09;		GROUPS\_INFO
-
-&#x09;group\_id -> is\_public  (is\_public does not determine name or description)
-
-&#x09;group\_id -> name
-
-&#x09;group\_id -> description
-
-
-
-&#x09;		MESSAGES
-
-&#x09;id -> chat\_id          (chat\_id does not determine sender\_id or message\_text)
-
-&#x09;id -> sender\_id
-
-&#x09;id -> message\_text
-
-&#x09;id -> replies\_to
-
-&#x09;id -> sent\_at
-
-
-
-&#x09;		SESSION\_CODES
-
-&#x09;(user\_id, device\_id) -> code        (code and created\_at are independent)
-
-&#x09;(user\_id, device\_id) -> created\_at
-
-
-
-&#x09;		MESSAGE\_STATUSES
-
-&#x09;(message\_id, user\_id) -> is\_read    (read\_at is a timestamp helper for is\_read, 
-
-&#x09;(message\_id, user\_id) -> read\_at     both strictly depend on the composite PK)
-
-
-
-&#x09;		MESSAGE\_ATTACHMENTS
-
-&#x09;id -> message\_id       (message\_id does not determine file\_path, file\_type, etc.)
-
-&#x09;id -> file\_path
-
-&#x09;id -> file\_type
-
-&#x09;id -> file\_size
-
-&#x09;id -> file\_name
-
-&#x09;id -> metadata
-
-
-
-&#x20;-- Tables with 0 or 1 non-key attributes automatically satisfy 3NF because it is mathematically 
-
-&#x20;  impossible to have a transitive dependency with less than two non-key columns:
-
-&#x09;CHATS             - Only 1 non-key column (is\_group)
-
-&#x09;CHAT\_MEMBERS      - Only 1 non-key column (joined\_at)
-
-&#x09;MESSAGE\_REACTIONS - Only 1 non-key column (created\_at)
-
-
-
-&#x20;-- Fields "email" and "user\_tag" in tables USERS and UNVERIFIED\_USERS are unique candidate keys. Every non-key attribute depends strictly on these keys. No transitive dependencies between non-prime attributes exist, which satisfies 3NF and BCNF.
-
-
+> [!IMPORTANT]
+> Fields "email" and "user_tag" in tables USERS and UNVERIFIED_USERS are unique candidate keys. Every non-key attribute depends strictly on these keys. No transitive dependencies between non-prime attributes exist, which satisfies 3NF and BCNF.
 
