@@ -15,6 +15,10 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network)
 add_executable(Server
   main.cpp
   logger.h logger.cpp
+  server.h server.cpp
+  handlermanager.h handlermanager.cpp
+  handler.h handler.cpp
+  server.crt server.key
 )
 target_link_libraries(Server PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Network)
 
