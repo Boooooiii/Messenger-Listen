@@ -13,7 +13,7 @@ The project is organized as monorepository with 3 key folders: 'database', 'clie
 * [ ] Client part with base GUI for login/registration
 * [ ] Simple message sending between users
 * [ ] Encrypted message forwarding
-* [ ] Connections pool
+* [X] Connection pool
 
 ### *Features*
 
