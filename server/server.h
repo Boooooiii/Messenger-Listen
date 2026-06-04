@@ -3,23 +3,16 @@
 
 #include "logger.h"
 #include "handlermanager.h"
+#include "commandrouter.h"
 
 class Server
 {
 public:
-    Server() : logger("server.log") {
-        logger.log("Main server starting.");
-
-        connectionPool = &HandlerManager::getInstance();
-        connectionPool->startConnectionPool();
-        logger.log("Server started Connection pool.");
-    }
-
-    ~Server() {
-        logger.log("Main server destroying.");
-    }
-
+    Server();
+    ~Server();
 private:
+    void initServerCommands();
+
     Logger logger;
     HandlerManager* connectionPool;
 };

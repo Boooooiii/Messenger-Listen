@@ -78,6 +78,9 @@ CMakeLists.txt.user*
 *.crt
 *.key
 
+# JSON files
+*.json
+
 # Directories with generated files
 .moc/
 .obj/
