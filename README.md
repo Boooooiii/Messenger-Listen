@@ -8,8 +8,7 @@ The project is organized as monorepository with 3 key folders: 'database', 'clie
 ## *Main tasks*
 
 * [ ] Functional main server with SSL for login/registration and saving data to DB
-* [ ] Email verification server
-* [ ] Update main server for email verification
+* [ ] Email verification server + login/registration process update
 * [ ] Client part with base GUI for login/registration
 * [ ] Simple message sending between users
 * [ ] Encrypted message forwarding
