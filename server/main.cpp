@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     Server server_instance;
 
-    QTimer::singleShot(3000, &a, &QCoreApplication::quit);
+    //QTimer::singleShot(3000, &a, &QCoreApplication::quit); temporay line for testing correct start and finish logs
 
     return QCoreApplication::exec();
 }

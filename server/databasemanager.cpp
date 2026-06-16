@@ -5,17 +5,16 @@
 #include <QFile>
 #include <QCoreApplication>
 
-DatabaseManager::DatabaseManager(int handlerId) {
-    Logger dbLogger("db_init_" + QString::number(handlerId));
-    QString connectionName = "pg_connection_handler_" + QString::number(handlerId);
+DatabaseManager::DatabaseManager(int connectionId, Logger* logger) : connectionId(connectionId), logger(logger) {
+    QString connectionName = "pg_connection_handler_" + QString::number(connectionId);
 
     db = QSqlDatabase::addDatabase("QPSQL", connectionName);
 
-    QString configPath = QCoreApplication::applicationDirPath() + "../../config.json";
+    QString configPath = "../../config.json";
     QFile configFile(configPath);
 
     if (!configFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        dbLogger.log("Could not open config.json at path: " + configPath, Logger::LogLevel::Error);
+        logger->log("Could not open config.json at path: " + configPath, Logger::LogLevel::Error);
         return;
     }
 
@@ -24,7 +23,7 @@ DatabaseManager::DatabaseManager(int handlerId) {
 
     QJsonDocument jsonDoc = QJsonDocument::fromJson(configData);
     if (!jsonDoc.isObject()) {
-        dbLogger.log("config.json format is invalid (not a JSON object)", Logger::LogLevel::Error);
+        logger->log("config.json format is invalid (not a JSON object)", Logger::LogLevel::Error);
         return;
     }
 
@@ -32,7 +31,7 @@ DatabaseManager::DatabaseManager(int handlerId) {
     QJsonObject pgObj = rootObj["postgres"].toObject();
 
     if (pgObj.isEmpty()) {
-        dbLogger.log("'postgres' block is missing in config.json", Logger::LogLevel::Error);
+        logger->log("'postgres' block is missing in config.json", Logger::LogLevel::Error);
         return;
     }
 
@@ -43,15 +42,17 @@ DatabaseManager::DatabaseManager(int handlerId) {
     db.setPort(pgObj["port"].toInt(8040));
 
     if (db.open()) {
-        dbLogger.log("Handler " + QString::number(handlerId) + " successfully connected to PostgreSQL.");
+        logger->log("Connection " + QString::number(connectionId) + " successfully connected to PostgreSQL.");
         usersTable = new UsersTable(db);
         usersTable->init();
     } else {
-        dbLogger.log("Handler " + QString::number(handlerId) + " database error: " + db.lastError().text(), Logger::LogLevel::Error);
+        logger->log("Connection " + QString::number(connectionId) + " database connection error: " + db.lastError().text(), Logger::LogLevel::Error);
     }
 }
 
 DatabaseManager::~DatabaseManager() {
+    logger->log("Connection " + QString::number(connectionId) + " closing database connection.");
     delete usersTable;
     if (db.isOpen()) db.close();
+    logger->log("Connection " + QString::number(connectionId) + " successfully closed database connection.");
 }

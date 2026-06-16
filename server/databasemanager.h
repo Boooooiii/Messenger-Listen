@@ -9,7 +9,7 @@
 class DatabaseManager
 {
 public:
-    explicit DatabaseManager(int handlerId);
+    explicit DatabaseManager(int connectionId, Logger* logger);
 
     ~DatabaseManager();
 
@@ -21,6 +21,9 @@ public:
 private:
     QSqlDatabase db;
     UsersTable* usersTable = nullptr;
+
+    int connectionId;
+    Logger* logger;
 };
 
 #endif // DATABASEMANAGER_H

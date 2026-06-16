@@ -64,6 +64,11 @@ HandlerManager::~HandlerManager() {
         thread->quit();
         thread->wait();
     }
+
+    qDeleteAll(workers);
+    workers.clear();
+
+    logger.log("Connection pool successfully destroyed.");
 }
 
 

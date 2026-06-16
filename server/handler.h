@@ -17,19 +17,18 @@ class Handler : public QObject
     Q_OBJECT
 public:
     explicit Handler(unsigned int handlerID, const QSslConfiguration& readyConfig, QObject *parent = nullptr)
-        : QObject(parent), id(handlerID), config(readyConfig), logger("handler_" + QString::number(handlerID)), router(CommandRouter::getInstance()), dbManager(new DatabaseManager(handlerID)) {
-        logger.log("Handler " + QString::number(handlerID) + " started");
+        : QObject(parent), id(handlerID), config(readyConfig), logger("handler_" + QString::number(handlerID)), router(CommandRouter::getInstance()),
+        dbManager(new DatabaseManager(handlerID, &logger)) {
 
-        if (!dbManager->isConnected()) {
-            logger.log("Database connection failed in handler " + QString::number(id) + ": " + dbManager->lastError(), Logger::LogLevel::Error);
-        }
+        logger.log("Handler " + QString::number(handlerID) + " started");
     }
 
     ~Handler() {
+        logger.log("Handler " + QString::number(id) + " destroying.");
         if (dbManager) {
             delete dbManager;
         }
-        logger.log("Handler +" + QString::number(id) + " destroying.");
+        logger.log("Handler " + QString::number(id) + " destroyed successfully.");
     }
 
     int getClientCount() const { return clients.size(); }
@@ -57,6 +56,44 @@ public slots:
         } else {
             socket->deleteLater();
         }
+    }
+
+    void sendToClient(QSslSocket* socket, CommandType type, const QString& requestId, bool status, const QString& message = "None", const QJsonObject& extraData = QJsonObject()) {
+
+        if (!socket || !socket->isOpen()) {
+            logger.log("Attempted to send data to a closed or invalid socket.", Logger::LogLevel::Warning);
+            return;
+        }
+
+        QJsonObject responsePayload;
+        responsePayload["requestId"] = requestId;
+        responsePayload["status"] = status;
+        responsePayload["message"] = message;
+
+        if (!extraData.isEmpty()) {
+            for (auto it = extraData.begin(); it != extraData.end(); ++it) {
+                responsePayload[it.key()] = it.value();
+            }
+        }
+
+        QByteArray payloadData = QJsonDocument(responsePayload).toJson(QJsonDocument::Compact);
+        uint32_t payloadSize = static_cast<uint32_t>(payloadData.size());
+        uint16_t commandInt = static_cast<uint16_t>(type);
+
+        QByteArray buffer;
+        QDataStream out(&buffer, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_6_0);
+
+        out << payloadSize;
+        out << commandInt;
+        out.writeRawData(payloadData.constData(), payloadSize);
+
+        socket->write(buffer);
+        socket->flush();
+
+        logger.log("Sent packet to " + socket->peerAddress().toString() + ":" + QString::number(socket->peerPort()) +
+                   " | Cmd: " + QString::number(commandInt) +
+                   " | Size: " + QString::number(payloadSize) + " bytes");
     }
 
 private slots:
@@ -97,7 +134,7 @@ private slots:
                        " | Cmd: " + QString::number(commandInt) +
                        " | Size: " + QString::number(payloadSize) + " bytes");
 
-            CommandRouter::getInstance().route(socket, packet, dbManager);
+            CommandRouter::getInstance().route(socket, packet, dbManager, &logger, this);
         }
 
         socket->write("ACK");
@@ -127,10 +164,6 @@ private:
         connect(socket, &QSslSocket::disconnected, this, &Handler::onClientDisconnected);
 
         socket->startServerEncryption();
-    }
-
-    void parseIncomingDate(const QByteArray& data) {
-
     }
 
     unsigned int id;

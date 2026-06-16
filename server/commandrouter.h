@@ -9,6 +9,8 @@
 
 #include <QJsonObject>
 
+class Handler;
+
 enum class CommandType : uint16_t {
     Register = 1,
     Login,
@@ -32,13 +34,13 @@ public:
         return instance;
     }
 
-    using HandlerFunc = std::function<void(QSslSocket*, const Packet&, DatabaseManager*, Logger*)>;
+    using HandlerFunc = std::function<void(QSslSocket*, const Packet&, DatabaseManager*, Logger*, Handler*)>;
 
     void registerCommand(CommandType type, HandlerFunc handler);
 
-    void route(QSslSocket* clientSocket, const Packet& packet, DatabaseManager* dbManager, Logger* logger);
+    void route(QSslSocket* clientSocket, const Packet& packet, DatabaseManager* dbManager, Logger* logger, Handler* handler);
 private:
-    CommandRouter();
+    CommandRouter() {}
 
     std::unordered_map<CommandType, HandlerFunc> routes;
 };

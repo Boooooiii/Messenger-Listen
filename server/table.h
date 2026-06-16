@@ -4,6 +4,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QVariantList>
 
 class Table {
 protected:
@@ -12,8 +13,7 @@ protected:
 
     explicit Table(QSqlDatabase db) : m_db(db) {}
 
-    template<typename... Args>
-    bool executeRequest(const QString& request, const Args&... values);
+    bool executeRequest(const QString& request, const QVariantList& values = {}, bool expectResult = false);
 
 public:
     virtual ~Table() = default;
